@@ -12,7 +12,10 @@
     <style>
         body {
             font-family: Arial, sans-serif;
-            background-color: #f8f9fa;
+            background: linear-gradient(to right, #4facfe, #00f2fe);
+            color: white;
+            text-align: center;
+            min-height: 100vh;
             background-image: url(./image/weather.jpg);
             background-size: cover;
             background-repeat: no-repeat;
@@ -20,11 +23,21 @@
         .container {
             max-width: 500px;
             margin-top: 50px;
-            text-align: center;
+            
         }
         .weather-icon {
             width: 100px;
             height: 100px;
+        }
+        .card {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 20px;
+            box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.2);
+            transition: transform 0.3s ease-in-out;
+        }
+        .card:hover {
+            transform: scale(1.05);
         }
     </style>
 </head>
@@ -32,38 +45,79 @@
     <div class="container">
         <h2>Weather App</h2>
         <input type="text" id="city" class="form-control" placeholder="Enter city name">
-        <button type="submit" class="btn btn-primary mt-3" onclick="getWeather()">Get Weather</button>
+        <button type="button" class="btn btn-primary mt-3" onclick="getWeather()">Get Weather</button>
         <div id="weatherResult" class="mt-4"></div>
+        <div id="forecastResult" class="mt-4"></div>
     </div>
     
     <script>
         async function getWeather() {
             const city = document.getElementById('city').value;
-            const apiKey = 'eebc1336a176cfed1067c35521c880ac'; 
-            const url = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            localStorage.setItem('lastCity', city);
+            const apiKey = 'eebc1336a176cfed1067c35521c880ac';
+            const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
+            const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
             
             try {
-                const response = await fetch(url);
-                const data = await response.json();
+                const weatherResponse = await fetch(weatherUrl);
+                const weatherData = await weatherResponse.json();
                 
-                if (data.cod === 200) {
-                    const iconCode = data.weather[0].icon;
+                if (weatherData.cod === 200) {
+                    const iconCode = weatherData.weather[0].icon;
                     const iconUrl = `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
                     
                     document.getElementById('weatherResult').innerHTML = `
-                        <h4>${data.name}, ${data.sys.country}</h4>
+                        <h4>${weatherData.name}, ${weatherData.sys.country}</h4>
                         <img src="${iconUrl}" alt="Weather Icon" class="weather-icon">
-                        <p>Temperature: ${data.main.temp}°C</p>
-                        <p>Humidity: ${data.main.humidity}%</p>
-                        <p>Wind Speed: ${data.wind.speed} m/s</p>
+                        <p>Temperature: ${weatherData.main.temp}°C</p>
+                        <p>Humidity: ${weatherData.main.humidity}%</p>
+                        <p>Wind Speed: ${weatherData.wind.speed} m/s</p>
                     `;
                 } else {
                     document.getElementById('weatherResult').innerHTML = `<p class='text-danger'>City not found</p>`;
+                }
+                
+                const forecastResponse = await fetch(forecastUrl);
+                const forecastData = await forecastResponse.json();
+                
+                if (forecastData.cod === "200") {
+                    let forecastHTML = '<h4>5-Day Forecast</h4>';
+                    for (let i = 0; i < forecastData.list.length; i += 8) {
+                        const day = forecastData.list[i];
+                        const date = new Date(day.dt_txt).toDateString();
+                        const iconUrl = `https://openweathermap.org/img/wn/${day.weather[0].icon}@2x.png`;
+                        
+                        forecastHTML += `
+                            <div class='card mt-2 p-3'>
+                                <h5>${date}</h5>
+                                <img src="${iconUrl}" alt="Weather Icon" class="weather-icon">
+                                <p>Temp: ${day.main.temp}°C</p>
+                                <p>${day.weather[0].description}</p>
+                            </div>
+                        `;
+                    }
+                    document.getElementById('forecastResult').innerHTML = forecastHTML;
                 }
             } catch (error) {
                 console.error(error);
                 document.getElementById('weatherResult').innerHTML = `<p class='text-danger'>Error fetching data</p>`;
             }
+        }
+        
+        window.onload = function () {
+            const lastCity = localStorage.getItem('lastCity');
+            if (lastCity) {
+                document.getElementById('city').value = lastCity;
+                getWeather();
+            }
+        };
+    </script>
+    
+    <script>
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('service-worker.js')
+                .then(() => console.log('Service Worker Registered'))
+                .catch(error => console.log('Service Worker Registration Failed:', error));
         }
     </script>
     
