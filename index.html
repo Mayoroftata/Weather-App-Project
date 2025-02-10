@@ -50,11 +50,13 @@
         <div id="forecastResult" class="mt-4"></div>
     </div>
     
-    <script>
+    <script type="module">
+        import { apiKey } from '/apikey.js'
+        console.log(apiKey);
+        
         async function getWeather() {
             const city = document.getElementById('city').value;
             localStorage.setItem('lastCity', city);
-            const apiKey = 'eebc1336a176cfed1067c35521c880ac';
             const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`;
             const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`;
             
