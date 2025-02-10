@@ -51,8 +51,7 @@
     </div>
     
     <script type="module">
-        const apiKey = import.meta.env.API_KEY; // For Vite (React)
-        
+        const apiKey = import.meta.env.VITE_API_KEY;
         async function getWeather() {
             const city = document.getElementById('city').value;
             localStorage.setItem('lastCity', city);
